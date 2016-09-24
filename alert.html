@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <script src="js/jquery-1.10.1.min.js"></script>
+</head>
+<body>
+<script>
+$(document).ready(function(){
+    var send = function(time){
+        // http://localhost:8080/myapp/myresource/json
+        $.get('json.php',{"sleep":time},function(resp){
+
+            if(resp.code == 0){
+                console.log(resp.data.sleep + ' start:' + resp.data.start_time + ' end:' + resp.data.end_time);
+            }
+        });
+    };
+
+    // 出现过10 1 5的情况
+    send(5);
+    send(3);
+    send(1);
+});
+</script>
+</body>
+</html>
