@@ -16,6 +16,9 @@
 //    xhr.open('get','http://movesun.com',true);
     xhr.setRequestHeader('Content-Type','text/html;charset=utf-8');
     xhr.send();
+
+    xhr.withCredentials = true;
+
     xhr.onreadystatechange = function(){
         if(4 == xhr.readyState && 200 == xhr.status){
             $('#web').value = xhr.responseText;

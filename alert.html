@@ -18,10 +18,12 @@ $(document).ready(function(){
         });
     };
 
-    // 出现过10 1 5的情况
     send(5);
-    send(3);
-    send(1);
+
+    setTimeout(function(){
+        alert('send finished!');
+        window.document.title = 'change title';
+    },5000);
 });
 </script>
 </body>

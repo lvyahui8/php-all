@@ -8,7 +8,7 @@
 
 
 header('Content-Type:application/json');
-
+date_default_timezone_set('Asia/Shanghai');
 $startTime = date("H:i:s");
 if(isset($_GET['sleep'])){
     sleep(intval($_GET['sleep']));

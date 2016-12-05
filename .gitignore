@@ -8,6 +8,7 @@
 out
 gen### Joomla template
 /.gitignore
+tencent
 /.htaccess
 /administrator/cache/*
 /administrator/components/com_admin/*
