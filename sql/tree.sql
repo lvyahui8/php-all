@@ -35,10 +35,7 @@ INSERT INTO node1(id,name, num, p_id) VALUES
 # 查询森林的根节点
 SELECT * FROM node1 WHERE p_id=0;
 # 查询节点下所有子孙节点 需要递归查询
-
 # 更新某个节点的权值 需要递归查询出子孙节点累加
-
-
 
 DELETE FROM node2;
 INSERT INTO node2(id,name, num, p_id,search_key) VALUES
@@ -71,8 +68,30 @@ UPDATE node2,(SELECT search_key FROM node2 WHERE id = 4) rt SET num=num+1 WHERE 
 
 DELETE FROM node2 WHERE search_key LIKE '0-1-2%';
 
+# 假设子节点不清除
 # 将子孙节点挂到父辈节点下，更新儿子节点的search_key、p_id、level字段
 # UPDATE node2, SET p_id = {B.p_id}
-UPDATE node2, SET p_id = 1
-# 分两步，第一、把子节点挂到自己父节点下
+UPDATE node2 SET p_id = 1 AND search_key = concat('0-1-',id);
+# 删除
+DELETE FROM node2 WHERE id=2;
+
+DELETE FROM node3;
+INSERT INTO node3 (name, num, lft, rgt, level) VALUE ('A',0,1,2,0);
+
+DROP FUNCTION IF EXISTS insert_node;
+CREATE FUNCTION insert_node(param_name VARCHAR(12),param_num INT,param_p_id INT)
+returns BOOL
+BEGIN
+  DECLARE p_lft INT;
+  DECLARE p_rgt INT;
+  DECLARE p_level INT;
+  SELECT lft,rgt,level INTO p_lft,p_rgt,p_level FROM node3 WHERE id=param_p_id ;
+  UPDATE node3 SET lft = lft + 2 WHERE lft > p_lft;
+  # 按照先序遍历规则，在一个节点M下添加节点之后，节点M的右值必然也要加2
+  UPDATE node3 SET rgt = rgt + 2 WHERE rgt >= p_rgt;
+  INSERT INTO node3 (name, num, lft, rgt, level) VALUE (param_name,param_num,p_lft + 1,p_rgt + 1,p_level + 1);
+  RETURN FALSE ;
+END;
+
+select insert_node('B',7,1);
 
