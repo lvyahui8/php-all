@@ -12,8 +12,10 @@ CREATE TABLE node2 (
   search_key VARCHAR(128)  DEFAULT '' COMMENT '用来快速搜索子孙的key，存储根节点到该节点的路径',
   level INT DEFAULT 0 COMMENT '层级'
 );
+DROP TABLE IF EXISTS node3;
 CREATE TABLE node3 (
   id INT AUTO_INCREMENT PRIMARY KEY ,
+  tree_id INT NOT NULL COMMENT '为保证对某一棵的操作不影响森林中的其他书',
   name VARCHAR(12) NOT NULL ,
   num INT NOT NULL DEFAULT 0 COMMENT '节点下叶子的数量、节点权重（可认为分类下产品数量）',
   lft INT NOT NULL ,
@@ -21,6 +23,7 @@ CREATE TABLE node3 (
   level INT DEFAULT 0
 );
 
+##########################################################################################
 DELETE FROM node1;
 INSERT INTO node1(id,name, num, p_id) VALUES
   (1,'A',10,0),
@@ -37,6 +40,7 @@ SELECT * FROM node1 WHERE p_id=0;
 # 查询节点下所有子孙节点 需要递归查询
 # 更新某个节点的权值 需要递归查询出子孙节点累加
 
+##########################################################################################
 DELETE FROM node2;
 INSERT INTO node2(id,name, num, p_id,search_key) VALUES
   (1,'A',10,0,'0-1'),
@@ -75,8 +79,18 @@ UPDATE node2 SET p_id = 1 AND search_key = concat('0-1-',id);
 # 删除
 DELETE FROM node2 WHERE id=2;
 
+##########################################################################################
+
 DELETE FROM node3;
-INSERT INTO node3 (name, num, lft, rgt, level) VALUE ('A',0,1,2,0);
+
+insert into node3 (tree_id, name, num, lft, rgt, level) VALUE (1,'B',7,2,3,2);
+insert into node3 (tree_id, name, num, lft, rgt, level) VALUE (1,'D',1,5,6,3);
+insert into node3 (tree_id, name, num, lft, rgt, level) VALUE (1,'E',2,7,8,3);
+insert into node3 (tree_id, name, num, lft, rgt, level) VALUE (1,'C',3,4,9,2);
+insert into node3 (tree_id, name, num, lft, rgt, level) VALUE (1,'A',10,1,10,1);
+insert into node3 (tree_id, name, num, lft, rgt, level) VALUE (2,'G',2,2,3,2);
+insert into node3 (tree_id, name, num, lft, rgt, level) VALUE (2,'F',2,1,4,1);
+
 
 DROP FUNCTION IF EXISTS insert_node;
 CREATE FUNCTION insert_node(param_name VARCHAR(12),param_num INT,param_p_id INT)
