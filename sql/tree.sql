@@ -34,6 +34,8 @@ INSERT INTO node1(id,name, num, p_id) VALUES
   (6,'F',2,0),
   (7,'G',2,6)
 ;
+# 第一种方法优点是结构简单，更新简单，缺点是查询麻烦，特别是要查询子孙节点时，只能通过递归形式查询，效率极差
+
 
 # 查询森林的根节点
 SELECT * FROM node1 WHERE p_id=0;
@@ -51,10 +53,11 @@ INSERT INTO node2(id,name, num, p_id,search_key) VALUES
   (6,'F',2,0,'0-6'),
   (7,'G',2,6,'0-6-7');
 
+# 第二种方式在仅仅添加了一个路径字段，使得查询变的简单，并且更新也容易，在节点深度有限的情况下，个人认为第二种方式是比较优的选择
 # 查询森林的根节点
 SELECT * FROM node2 WHERE p_id = 0 AND search_key LIKE '0-%' AND level = 0;
 
-# 查询节点A下所有子孙节点 需要递归查询
+# 查询节点A下所有子孙节点
 # SELECT * FROM node2 WHERE search_key LIKE '{A.search_key}%';
 SELECT * FROM node2 WHERE search_key LIKE '0-1-%';
 
@@ -92,20 +95,43 @@ insert into node3 (tree_id, name, num, lft, rgt, level) VALUE (2,'G',2,2,3,2);
 insert into node3 (tree_id, name, num, lft, rgt, level) VALUE (2,'F',2,1,4,1);
 
 
-DROP FUNCTION IF EXISTS insert_node;
-CREATE FUNCTION insert_node(param_name VARCHAR(12),param_num INT,param_p_id INT)
-returns BOOL
-BEGIN
-  DECLARE p_lft INT;
-  DECLARE p_rgt INT;
-  DECLARE p_level INT;
-  SELECT lft,rgt,level INTO p_lft,p_rgt,p_level FROM node3 WHERE id=param_p_id ;
-  UPDATE node3 SET lft = lft + 2 WHERE lft > p_lft;
-  # 按照先序遍历规则，在一个节点M下添加节点之后，节点M的右值必然也要加2
-  UPDATE node3 SET rgt = rgt + 2 WHERE rgt >= p_rgt;
-  INSERT INTO node3 (name, num, lft, rgt, level) VALUE (param_name,param_num,p_lft + 1,p_rgt + 1,p_level + 1);
-  RETURN FALSE ;
-END;
+#### 这里先介绍几种简单的单元操作
+-- append操作，待加入节点不带子节点
+-- remove操作，待删除节点没有子节点
+  --  假如删除节点下有子节点，那还要考虑子节点怎么处理，是一并delete
 
-select insert_node('B',7,1);
+####### 添加节点
+
+DROP FUNCTION IF EXISTS append_node;
+CREATE FUNCTION append_node(param_name VARCHAR(12), param_num INT, param_p_id INT, param_tree_id INT)
+  returns INT
+  BEGIN
+    DECLARE p_lft INT;
+    DECLARE p_rgt INT;
+    DECLARE p_level INT;
+    DECLARE ret INT;
+
+    SELECT lft,rgt,level INTO p_lft,p_rgt,p_level FROM node3 WHERE tree_id = param_tree_id AND id=param_p_id ;
+    # 比前一个节点左值大的需要加2
+    UPDATE node3 SET lft = lft + 2 WHERE tree_id = param_tree_id AND lft > p_lft;
+    # 按照先序遍历规则，在一个节点M下添加节点之后，节点M的右值必然也要加2
+    UPDATE node3 SET rgt = rgt + 2 WHERE tree_id = param_tree_id AND rgt >= p_rgt;
+    INSERT INTO node3 (tree_id,name, num, lft, rgt, level)
+      VALUE (param_tree_id,param_name,param_num,p_lft + 1,p_rgt + 1,p_level + 1);
+    SELECT LAST_INSERT_ID() INTO ret;
+    RETURN ret;
+  END;
+
+# 在节点C下添加节点M，已知节点C的id为4，tree_id为1。
+select append_node('M', 7, 4, 1);
+
+######### 删除掉M节点 ，反向操作，进行-2操作，这里直接以待删除节点的数据来操作，那便是进行减1操作
+DROP FUNCTION IF EXISTS remove_node;
+create FUNCTION remove_node(param_id INT)
+  RETURNS INT
+  BEGIN
+
+  END;
+
+#### 更新节点（可以视为先delete节点，再讲节点挂到要挂在的位置）
 
