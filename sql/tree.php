@@ -21,15 +21,22 @@ $forest = array(
                 'num'   =>  3,
                 'childs' => array(
                     array(
-                        'name' => 'D',
-                        'num'   =>  1,
-                        'childs' => array()
+                        'name'  =>  'M',
+                        'num'   =>  10,
+                        'childs' => array(
+                            array(
+                                'name' => 'D',
+                                'num'   =>  1,
+                                'childs' => array()
+                            ),
+                            array(
+                                'name' => 'E',
+                                'num'   =>  2,
+                                'childs' => array()
+                            )
+                        ),
                     ),
-                    array(
-                        'name' => 'E',
-                        'num'   =>  2,
-                        'childs' => array()
-                    )
+
                 )
             )
         )

@@ -1,0 +1,13 @@
+{
+  "name": "samlv/swoole_app",
+  "type": "project",
+  "authors": [
+    {
+      "name": "samlv(吕亚辉)",
+      "email": "samlv@tencent.com"
+    }
+  ],
+  "require": {
+    "illuminate/database": "~5.4"
+  }
+}
