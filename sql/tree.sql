@@ -1,9 +1,11 @@
+DROP TABLE IF EXISTS node1;
 CREATE TABLE node1 (
   id INT AUTO_INCREMENT PRIMARY KEY ,
   name VARCHAR(12) NOT NULL,
   num INT NOT NULL DEFAULT 0 COMMENT '节点下叶子的数量、节点权重（可认为分类下产品数量）',
   p_id INT NOT NULL DEFAULT 0 COMMENT '0表示根节点'
 );
+DROP TABLE IF EXISTS node2;
 CREATE TABLE node2 (
   id INT AUTO_INCREMENT PRIMARY KEY ,
   name VARCHAR(12) NOT NULL ,
@@ -57,7 +59,7 @@ INSERT INTO node2(id,name, num, p_id,search_key) VALUES
 # 查询森林的根节点
 SELECT * FROM node2 WHERE p_id = 0 AND search_key LIKE '0-%' AND level = 0;
 
-# 查询节点A下所有子孙节点
+# 查询节点A下所有子孙节点 需要递归查询
 # SELECT * FROM node2 WHERE search_key LIKE '{A.search_key}%';
 SELECT * FROM node2 WHERE search_key LIKE '0-1-%';
 
@@ -95,10 +97,29 @@ insert into node3 (tree_id, name, num, lft, rgt, level) VALUE (2,'G',2,2,3,2);
 insert into node3 (tree_id, name, num, lft, rgt, level) VALUE (2,'F',2,1,4,1);
 
 
+DROP FUNCTION IF EXISTS insert_node;
+CREATE FUNCTION insert_node(param_name VARCHAR(12),param_num INT,param_p_id INT,param_tree_id INT)
+returns INT
+BEGIN
+  DECLARE p_lft INT;
+  DECLARE p_rgt INT;
+  DECLARE p_level INT;
+  DECLARE ret INT;
+  SELECT lft,rgt,level INTO p_lft,p_rgt,p_level FROM node3 WHERE tree_id = param_tree_id AND id=param_p_id ;
+  UPDATE node3 SET lft = lft + 2 WHERE tree_id = param_tree_id AND lft > p_lft;
+  # 按照先序遍历规则，在一个节点M下添加节点之后，节点M的右值必然也要加2
+  UPDATE node3 SET rgt = rgt + 2 WHERE tree_id = param_tree_id AND rgt >= p_rgt;
+  INSERT INTO node3 (tree_id,name, num, lft, rgt, level) VALUE (param_tree_id,param_name,param_num,p_lft + 1,p_rgt + 1,p_level + 1);
+  SELECT LAST_INSERT_ID() INTO ret;
+  RETURN ret;
+END;
+
+select insert_node(1,'M',7,1);
+
 #### 这里先介绍几种简单的单元操作
 -- append操作，待加入节点不带子节点
 -- remove操作，待删除节点没有子节点
-  --  假如删除节点下有子节点，那还要考虑子节点怎么处理，是一并delete
+--  假如删除节点下有子节点，那还要考虑子节点怎么处理，是一并delete
 
 ####### 添加节点
 
